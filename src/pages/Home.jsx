@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import Web3AuthButton from "../components/Web3AuthButton";
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contract/contract';
 
 const Home = () => {
   const { user, isLoading, provider, address } = useWeb3Auth();
   const [balance, setBalance] = useState("0");
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     const getBalance = async () => {
@@ -23,6 +25,25 @@ const Home = () => {
     };
 
     getBalance();
+  }, [provider]);
+
+  useEffect(() => {
+    const checkOwner = async () => {
+      if (provider) {
+        try {
+          const ethersProvider = new ethers.BrowserProvider(window.ethereum);
+          const signer = await ethersProvider.getSigner();
+          const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+          const owner = await contract.owner();
+          const currentAddress = await signer.getAddress();
+          setIsOwner(owner.toLowerCase() === currentAddress.toLowerCase());
+        } catch (error) {
+          console.error("Error checking owner:", error);
+        }
+      }
+    };
+
+    checkOwner();
   }, [provider]);
 
   if (isLoading) {
@@ -83,6 +104,16 @@ const Home = () => {
               <h2 className="text-xl font-bold mb-2">View Registered Cars</h2>
               <p className="text-gray-600">Check your registered vehicles and fines</p>
             </Link>
+
+            {isOwner && (
+              <Link 
+                to="/admin" 
+                className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow"
+              >
+                <h2 className="text-xl font-bold mb-2">Admin Dashboard</h2>
+                <p className="text-gray-600">Manage contract funds and settings</p>
+              </Link>
+            )}
           </div>
         </div>
       ) : (
