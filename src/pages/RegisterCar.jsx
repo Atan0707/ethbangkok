@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { ethers } from 'ethers'
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contract/contract'
+import { useWeb3Auth } from '../context/Web3AuthContext'
 
 const RegisterCar = () => {
     const [loading, setLoading] = useState(false)
@@ -10,6 +11,7 @@ const RegisterCar = () => {
     const [plateNumber, setPlateNumber] = useState('')
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
+    const { provider } = useWeb3Auth()
 
     const register = async (e) => {
         e.preventDefault()
@@ -18,9 +20,12 @@ const RegisterCar = () => {
         setSuccess('')
 
         try {
-            const provider = new ethers.BrowserProvider(window.ethereum)
-            const signer = await provider.getSigner()
-            const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
+            if (!provider) {
+                throw new Error("Please connect your wallet first");
+            }
+            const ethersProvider = new ethers.BrowserProvider(provider);
+            const signer = await ethersProvider.getSigner();
+            const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
             // Register plate number
             const tx = await contract.registerPlateNumber(icNumber, plateNumber)

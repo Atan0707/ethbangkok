@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { ethers } from 'ethers'
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contract/contract'
 import { useNavigate } from 'react-router-dom'
+import { useWeb3Auth } from '../context/Web3AuthContext'
 
 const ViewCars = () => {
   const [icNumber, setIcNumber] = useState('')
@@ -11,12 +12,16 @@ const ViewCars = () => {
   const [error, setError] = useState('')
   const [carFines, setCarFines] = useState({})
   const navigate = useNavigate()
+  const { provider } = useWeb3Auth()
 
   const fetchUnpaidFines = async (plateNumber) => {
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      const signer = await provider.getSigner()
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
+      if (!provider) {
+        throw new Error("Please connect your wallet first");
+      }
+      const ethersProvider = new ethers.BrowserProvider(provider);
+      const signer = await ethersProvider.getSigner();
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
       
       const unpaidFines = await contract.getTotalUnpaidFines(plateNumber)
       return ethers.formatEther(unpaidFines)

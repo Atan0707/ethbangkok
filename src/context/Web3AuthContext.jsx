@@ -4,6 +4,7 @@ import { EthereumPrivateKeyProvider } from "@web3auth/ethereum-provider";
 import { Web3AuthNoModal } from "@web3auth/no-modal";
 import { AuthAdapter } from "@web3auth/auth-adapter";
 import { ethers } from "ethers";
+import { SUPPORTED_CHAINS, DEFAULT_CHAIN } from '../config/chains';
 
 const Web3AuthContext = createContext(undefined);
 
@@ -13,57 +14,66 @@ export const Web3AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [address, setAddress] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [currentChain, setCurrentChain] = useState(DEFAULT_CHAIN);
 
     const clientId = "BPi5PB_UiIZ-cPz1GtV5i1I2iOSOHuimiXBI0e-Oe_u6X3oVAbCiAZOTEBtTXw4tsluTITPqA8zMsfxIKMjiqNQ";
 
-    const chainConfig = {
-        chainNamespace: CHAIN_NAMESPACES.EIP155,
-        chainId: "0xaa36a7",
-        rpcTarget: "https://rpc.ankr.com/eth_sepolia",
-        displayName: "Ethereum Sepolia Testnet",
-        blockExplorerUrl: "https://sepolia.etherscan.io",
-        ticker: "ETH",
-        tickerName: "Ethereum",
-        logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
+    const initializeWeb3Auth = async (chainId) => {
+        try {
+            const chainConfig = {
+                chainNamespace: CHAIN_NAMESPACES.EIP155,
+                chainId: SUPPORTED_CHAINS[chainId].chainId,
+                rpcTarget: SUPPORTED_CHAINS[chainId].rpcTarget,
+                displayName: SUPPORTED_CHAINS[chainId].displayName,
+                blockExplorerUrl: SUPPORTED_CHAINS[chainId].blockExplorerUrl,
+                ticker: SUPPORTED_CHAINS[chainId].ticker,
+                tickerName: SUPPORTED_CHAINS[chainId].tickerName,
+                logo: SUPPORTED_CHAINS[chainId].logo,
+            };
+
+            const privateKeyProvider = new EthereumPrivateKeyProvider({ 
+                config: { chainConfig } 
+            });
+
+            const web3authInstance = new Web3AuthNoModal({
+                clientId,
+                web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
+                privateKeyProvider,
+            });
+
+            const authadapter = new AuthAdapter();
+            web3authInstance.configureAdapter(authadapter);
+
+            await web3authInstance.init();
+            setWeb3auth(web3authInstance);
+
+            if (web3authInstance.provider) {
+                setProvider(web3authInstance.provider);
+                const userInfo = await web3authInstance.getUserInfo();
+                setUser(userInfo);
+                const ethersProvider = new ethers.BrowserProvider(web3authInstance.provider);
+                const signer = await ethersProvider.getSigner();
+                const userAddress = await signer.getAddress();
+                setAddress(userAddress);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     useEffect(() => {
-        const init = async () => {
-            try {
-                const privateKeyProvider = new EthereumPrivateKeyProvider({ 
-                    config: { chainConfig } 
-                });
+        initializeWeb3Auth(currentChain);
+    }, [currentChain]);
 
-                const web3authInstance = new Web3AuthNoModal({
-                    clientId,
-                    web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
-                    privateKeyProvider,
-                });
-
-                const authadapter = new AuthAdapter();
-                web3authInstance.configureAdapter(authadapter);
-
-                await web3authInstance.init();
-                setWeb3auth(web3authInstance);
-
-                if (web3authInstance.provider) {
-                    setProvider(web3authInstance.provider);
-                    const userInfo = await web3authInstance.getUserInfo();
-                    setUser(userInfo);
-                    const ethersProvider = new ethers.BrowserProvider(web3authInstance.provider);
-                    const signer = await ethersProvider.getSigner();
-                    const userAddress = await signer.getAddress();
-                    setAddress(userAddress);
-                }
-            } catch (error) {
-                console.error(error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        init();
-    }, []);
+    const switchChain = async (chainId) => {
+        if (!SUPPORTED_CHAINS[chainId]) {
+            throw new Error("Unsupported chain");
+        }
+        setCurrentChain(chainId);
+        await initializeWeb3Auth(chainId);
+    };
 
     const login = async () => {
         if (!web3auth) {
@@ -97,8 +107,11 @@ export const Web3AuthProvider = ({ children }) => {
         user,
         address,
         isLoading,
+        currentChain,
+        supportedChains: Object.keys(SUPPORTED_CHAINS),
         login,
-        logout
+        logout,
+        switchChain
     };
 
     return (
@@ -108,7 +121,6 @@ export const Web3AuthProvider = ({ children }) => {
     );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useWeb3Auth = () => {
     const context = useContext(Web3AuthContext);
     if (context === undefined) {
