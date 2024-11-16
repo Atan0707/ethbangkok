@@ -1,17 +1,25 @@
 // /* eslint-disable react/prop-types */
 // eslint-disable-next-line no-unused-vars
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contract/contract'
 import { Link } from 'react-router-dom'
+import { useWeb3Auth } from '../context/Web3AuthContext'
 
 const RegisterCar = () => {
+    const { user } = useWeb3Auth()
     const [loading, setLoading] = useState(false)
     const [icNumber, setIcNumber] = useState('')
     const [plateNumber, setPlateNumber] = useState('')
     const [email, setEmail] = useState('')
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
+
+    useEffect(() => {
+        if (user?.email) {
+            setEmail(user.email)
+        }
+    }, [user])
 
     const register = async (e) => {
         e.preventDefault()
@@ -109,6 +117,7 @@ const RegisterCar = () => {
                             placeholder="Enter email address"
                             className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
                             required
+                            readOnly
                         />
                     </div>
 
