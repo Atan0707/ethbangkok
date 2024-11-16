@@ -8,6 +8,7 @@ const RegisterCar = () => {
     const [loading, setLoading] = useState(false)
     const [icNumber, setIcNumber] = useState('')
     const [plateNumber, setPlateNumber] = useState('')
+    const [email, setEmail] = useState('')
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
 
@@ -18,17 +19,23 @@ const RegisterCar = () => {
         setSuccess('')
 
         try {
+            if (!window.ethereum) {
+                throw new Error("Please install MetaMask to use this feature");
+            }
+
             const provider = new ethers.BrowserProvider(window.ethereum)
+            await provider.send("eth_requestAccounts", [])
             const signer = await provider.getSigner()
             const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
 
-            // Register plate number
-            const tx = await contract.registerPlateNumber(icNumber, plateNumber)
+            // Register plate number with email
+            const tx = await contract.registerPlateNumber(icNumber, plateNumber, email)
             await tx.wait()
 
             setSuccess('Car registered successfully!')
             setIcNumber('')
             setPlateNumber('')
+            setEmail('')
 
             // Listen for the event
             contract.on("PlateNumberRegistered", (registeredIC, registeredPlate) => {
@@ -84,6 +91,21 @@ const RegisterCar = () => {
                             value={plateNumber}
                             onChange={(e) => setPlateNumber(e.target.value)}
                             placeholder="Enter plate number"
+                            className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                            Email
+                        </label>
+                        <input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter email address"
                             className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
                             required
                         />

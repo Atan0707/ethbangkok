@@ -1,4 +1,4 @@
 import TrafficViolation from "./TrafficViolation.json"
 
-export const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
-export const CONTRACT_ABI = TrafficViolation.abi;
+export const CONTRACT_ADDRESS = "0xe7E64f18F2345427d588e3fca0d6340b91047ebF"
+export const CONTRACT_ABI = TrafficViolation;
