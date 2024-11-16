@@ -3,14 +3,34 @@ import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { ethers } from 'ethers'
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contract/contract'
+import { useWeb3Auth } from '../context/Web3AuthContext'
 
 const CarDetails = () => {
   const { plateNumber } = useParams()
+  const { provider, address } = useWeb3Auth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [violationCount, setViolationCount] = useState(0)
   const [totalUnpaidFines, setTotalUnpaidFines] = useState('0')
   const [violations, setViolations] = useState([])
+  const [balance, setBalance] = useState("0")
+
+  useEffect(() => {
+    const getBalance = async () => {
+      if (provider) {
+        try {
+          const ethersProvider = new ethers.BrowserProvider(provider);
+          const signer = await ethersProvider.getSigner();
+          const balance = await ethersProvider.getBalance(await signer.getAddress());
+          setBalance(ethers.formatEther(balance));
+        } catch (error) {
+          console.error("Error fetching balance:", error);
+        }
+      }
+    };
+
+    getBalance();
+  }, [provider]);
 
   useEffect(() => {
     fetchCarDetails()
@@ -22,8 +42,11 @@ const CarDetails = () => {
     setError('')
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      const signer = await provider.getSigner()
+      if (!provider) {
+        throw new Error("Please connect your wallet first");
+      }
+      const ethersProvider = new ethers.BrowserProvider(provider)
+      const signer = await ethersProvider.getSigner()
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
 
       // Get violation count
@@ -60,8 +83,11 @@ const CarDetails = () => {
     setError('')
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      const signer = await provider.getSigner()
+      if (!provider) {
+        throw new Error("Please connect your wallet first");
+      }
+      const ethersProvider = new ethers.BrowserProvider(provider)
+      const signer = await ethersProvider.getSigner()
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
 
       // Convert ETH to Wei for the transaction
@@ -88,9 +114,21 @@ const CarDetails = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
-        <h1 className="text-2xl font-bold mb-6 text-center">
-          Car Details - {plateNumber}
-        </h1>
+        <div className="flex flex-col space-y-4 mb-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold">
+              Car Details - {plateNumber}
+            </h1>
+            <span className="bg-slate-600 text-white px-3 py-1 rounded">
+              Balance: {balance} ETH
+            </span>
+          </div>
+          {address && (
+            <div className="bg-gray-50 p-2 rounded text-sm break-all">
+              <span className="font-medium">Wallet Address:</span> {address}
+            </div>
+          )}
+        </div>
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
