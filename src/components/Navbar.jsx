@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+// /* eslint-disable react/prop-types */
 import Web3AuthButton from './Web3AuthButton';
 import { Link } from 'react-router-dom'; 
 

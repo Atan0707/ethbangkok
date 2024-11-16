@@ -1,7 +1,5 @@
+// eslint-disable-next-line no-unused-vars
 import { useState } from 'react';
-// import './App.css';
-// import Navbar from './components/Navbar';
-// import LED from './components/LED';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import ViewCars from './pages/ViewCars'
 import RegisterCar from './pages/RegisterCar'

@@ -4,7 +4,7 @@ function Web3AuthButton() {
   const { user, address, login, logout, isLoading } = useWeb3Auth();
 
   const shortenAddress = (addr) => {
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;   
   };
 
   if (isLoading) {
