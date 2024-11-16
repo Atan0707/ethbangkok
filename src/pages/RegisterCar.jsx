@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { ethers } from 'ethers'
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contract/contract'
+import { Link } from 'react-router-dom'
 
 const RegisterCar = () => {
     const [loading, setLoading] = useState(false)
@@ -111,13 +112,22 @@ const RegisterCar = () => {
                         />
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
-                    >
-                        {loading ? 'Registering...' : 'Register Car'}
-                    </button>
+                    <div className="space-y-2">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {loading ? 'Registering...' : 'Register Car'}
+                        </button>
+
+                        <Link
+                            to="/"
+                            className="block w-full text-center bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 transition-colors"
+                        >
+                            Back to Home
+                        </Link>
+                    </div>
                 </form>
             </div>
         </div>

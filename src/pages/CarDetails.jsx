@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { ethers } from 'ethers'
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contract/contract'
 import { useWeb3Auth } from '../context/Web3AuthContext'
@@ -173,6 +173,14 @@ const CarDetails = () => {
                 </div>
               </div>
             )}
+            <div className="mt-6">
+              <Link
+                to="/registered-cars"
+                className="block w-full text-center bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 transition-colors"
+              >
+                Back to Registered Cars
+              </Link>
+            </div>
           </div>
         )}
       </div>

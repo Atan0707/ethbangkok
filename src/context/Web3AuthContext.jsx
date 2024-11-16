@@ -7,6 +7,7 @@ import { ethers } from "ethers";
 
 const Web3AuthContext = createContext(undefined);
 
+// eslint-disable-next-line react/prop-types
 export const Web3AuthProvider = ({ children }) => {
     const [web3auth, setWeb3auth] = useState(null);
     const [provider, setProvider] = useState(null);
