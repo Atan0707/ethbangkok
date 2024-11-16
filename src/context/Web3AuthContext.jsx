@@ -7,6 +7,49 @@ import { ethers } from "ethers";
 
 const Web3AuthContext = createContext(undefined);
 
+const chainConfigs = {
+    scrollSepolia: {
+        chainNamespace: CHAIN_NAMESPACES.EIP155,
+        chainId: "0x8274f",
+        rpcTarget: "https://sepolia-rpc.scroll.io",
+        displayName: "Scroll Sepolia",
+        blockExplorerUrl: "https://sepolia.scrollscan.com",
+        ticker: "ETH",
+        tickerName: "Ethereum",
+        logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
+    },
+    ethSepolia: {
+        chainNamespace: CHAIN_NAMESPACES.EIP155,
+        chainId: "0xaa36a7",
+        rpcTarget: "https://rpc.ankr.com/eth_sepolia",
+        displayName: "Ethereum Sepolia",
+        blockExplorerUrl: "https://sepolia.etherscan.io",
+        ticker: "ETH",
+        tickerName: "Ethereum",
+        logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
+    },
+    baseSepolia: {
+        chainNamespace: CHAIN_NAMESPACES.EIP155,
+        chainId: "0x14a33",
+        rpcTarget: "https://sepolia.base.org",
+        displayName: "Base Sepolia",
+        blockExplorerUrl: "https://sepolia.basescan.org",
+        ticker: "ETH",
+        tickerName: "Ethereum",
+        logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
+    },
+    zircuitSepolia: {
+        chainNamespace: CHAIN_NAMESPACES.EIP155,
+        chainId: "0x2B0C8",
+        rpcTarget: "https://zircuit-sepolia.rpc.caldera.xyz/http",
+        displayName: "Zircuit Sepolia",
+        blockExplorerUrl: "https://sepolia.explorer.zircuit.com",
+        ticker: "ETH",
+        tickerName: "Ethereum",
+        logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
+    }
+};
+
 // eslint-disable-next-line react/prop-types
 export const Web3AuthProvider = ({ children }) => {
     const [web3auth, setWeb3auth] = useState(null);
@@ -14,25 +57,16 @@ export const Web3AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [address, setAddress] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [currentChain, setCurrentChain] = useState('scrollSepolia');
+    const [availableChains] = useState(Object.keys(chainConfigs));
 
     const clientId = "BPi5PB_UiIZ-cPz1GtV5i1I2iOSOHuimiXBI0e-Oe_u6X3oVAbCiAZOTEBtTXw4tsluTITPqA8zMsfxIKMjiqNQ";
-
-    const chainConfig = {
-        chainNamespace: CHAIN_NAMESPACES.EIP155,
-        chainId: "0xaa36a7",
-        rpcTarget: "https://rpc.ankr.com/eth_sepolia",
-        displayName: "Ethereum Sepolia Testnet",
-        blockExplorerUrl: "https://sepolia.etherscan.io",
-        ticker: "ETH",
-        tickerName: "Ethereum",
-        logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
-    };
 
     useEffect(() => {
         const init = async () => {
             try {
                 const privateKeyProvider = new EthereumPrivateKeyProvider({ 
-                    config: { chainConfig } 
+                    config: { chainConfigs } 
                 });
 
                 const web3authInstance = new Web3AuthNoModal({
@@ -92,6 +126,46 @@ export const Web3AuthProvider = ({ children }) => {
         setAddress(null);
     };
 
+    const switchChain = async (chainKey) => {
+        if (!chainConfigs[chainKey]) {
+            throw new Error("Invalid chain selected");
+        }
+
+        try {
+            setIsLoading(true);
+            const privateKeyProvider = new EthereumPrivateKeyProvider({ 
+                config: { chainConfig: chainConfigs[chainKey] } 
+            });
+
+            const web3authInstance = new Web3AuthNoModal({
+                clientId,
+                web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
+                privateKeyProvider,
+            });
+
+            const authadapter = new AuthAdapter();
+            web3authInstance.configureAdapter(authadapter);
+
+            await web3authInstance.init();
+            setWeb3auth(web3authInstance);
+            setCurrentChain(chainKey);
+
+            if (web3authInstance.provider) {
+                setProvider(web3authInstance.provider);
+                const userInfo = await web3authInstance.getUserInfo();
+                setUser(userInfo);
+                const ethersProvider = new ethers.BrowserProvider(web3authInstance.provider);
+                const signer = await ethersProvider.getSigner();
+                const userAddress = await signer.getAddress();
+                setAddress(userAddress);
+            }
+        } catch (error) {
+            console.error("Error switching chain:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const value = {
         web3auth,
         provider,
@@ -99,7 +173,10 @@ export const Web3AuthProvider = ({ children }) => {
         address,
         isLoading,
         login,
-        logout
+        logout,
+        currentChain,
+        switchChain,
+        availableChains
     };
 
     return (

@@ -1,10 +1,13 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from 'react'
 import { ethers } from 'ethers'
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contract/contract'
+import { getContractAddress, CONTRACT_ABI } from '../contract/contract'
 import { useNavigate, Link } from 'react-router-dom'
+import { useWeb3Auth } from '../context/Web3AuthContext'
+import ChainSelector from '../components/ChainSelector'
 
 const ViewCars = () => {
+  const { provider, currentChain } = useWeb3Auth()
   const [icNumber, setIcNumber] = useState('')
   const [registeredCars, setRegisteredCars] = useState([])
   const [loading, setLoading] = useState(false)
@@ -12,12 +15,17 @@ const ViewCars = () => {
   const [carFines, setCarFines] = useState({})
   const navigate = useNavigate()
 
+  const getContract = async () => {
+    const ethersProvider = new ethers.BrowserProvider(provider)
+    const signer = await ethersProvider.getSigner()
+    const network = await ethersProvider.getNetwork()
+    const contractAddress = getContractAddress(network.chainId.toString(16))
+    return new ethers.Contract(contractAddress, CONTRACT_ABI, signer)
+  }
+
   const fetchUnpaidFines = async (plateNumber) => {
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      const signer = await provider.getSigner()
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
-      
+      const contract = await getContract()
       const unpaidFines = await contract.getTotalUnpaidFines(plateNumber)
       return ethers.formatEther(unpaidFines)
     } catch (err) {
@@ -34,9 +42,7 @@ const ViewCars = () => {
     setCarFines({})
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      const signer = await provider.getSigner()
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
+      const contract = await getContract()
 
       try {
         const plateNumbers = await contract.getPlateNumbersByIC(icNumber)
@@ -66,19 +72,13 @@ const ViewCars = () => {
     }
   }
 
-  const totalUnpaid = async (plateNumber) => {
-      const provider = new ethers.BrowserProvider(window.ethereum) // tukar dengan JsonRpcProvider kalau dah deploy
-      const signer = await provider.getSigner()
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
-
-      const unpaid = contract.getTotalUnpaid(plateNumber);
-      return unpaid;
-  }
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-md mx-auto bg-white rounded-lg shadow p-6">
-        <h1 className="text-2xl font-bold mb-6 text-center">View Registered Cars</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">View Registered Cars</h1>
+          <ChainSelector />
+        </div>
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">

@@ -4,6 +4,7 @@ import Web3AuthButton from "../components/Web3AuthButton";
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contract/contract';
+import ChainSelector from '../components/ChainSelector';
 
 const Home = () => {
   const { user, isLoading, provider, address } = useWeb3Auth();
@@ -31,8 +32,9 @@ const Home = () => {
     const checkOwner = async () => {
       if (provider) {
         try {
-          const ethersProvider = new ethers.BrowserProvider(window.ethereum);
+          const ethersProvider = new ethers.BrowserProvider(provider);
           const signer = await ethersProvider.getSigner();
+          const network = await ethersProvider.getNetwork();
           const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
           const owner = await contract.owner();
           const currentAddress = await signer.getAddress();
@@ -58,30 +60,16 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-slate-300">
-      <div className="bg-slate-400 p-4">
-        <div className="container mx-auto">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <Web3AuthButton />
-              {user && (
-                <span className="text-white bg-slate-600 px-3 py-1 rounded">
-                  Balance: {balance} ETH
-                </span>
-              )}
-            </div>
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <ChainSelector />
+            <Web3AuthButton />
           </div>
-          
           {user && (
-            <div className="mt-4 bg-white rounded-lg p-4 shadow">
-              <h2 className="text-lg font-semibold mb-2">User Details</h2>
-              <div className="space-y-2">
-                <p><span className="font-medium">Name:</span> {user.name}</p>
-                <p><span className="font-medium">Email:</span> {user.email}</p>
-                <p className="break-all">
-                  <span className="font-medium">Wallet Address:</span> {address}
-                </p>
-              </div>
-            </div>
+            <span className="text-white bg-slate-600 px-3 py-1 rounded">
+              Balance: {balance} ETH
+            </span>
           )}
         </div>
       </div>
