@@ -19,10 +19,10 @@ export const Web3AuthProvider = ({ children }) => {
 
     const chainConfig = {
         chainNamespace: CHAIN_NAMESPACES.EIP155,
-        chainId: "0xaa36a7",
-        rpcTarget: "https://rpc.ankr.com/eth_sepolia",
-        displayName: "Ethereum Sepolia Testnet",
-        blockExplorerUrl: "https://sepolia.etherscan.io",
+        chainId: "0x8274f",
+        rpcTarget: "https://sepolia-rpc.scroll.io",
+        displayName: "Scroll Sepolia Testnet",
+        blockExplorerUrl: "https://sepolia.scrollscan.com",
         ticker: "ETH",
         tickerName: "Ethereum",
         logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
