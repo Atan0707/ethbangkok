@@ -1,4 +1,4 @@
-# ETHGlobalBangkok
+# ETHGlobalBangkok - TraffAI
 
 Repository:
 
